@@ -1,0 +1,74 @@
+import tkinter as tk
+from tkinter import messagebox
+import math
+from scipy.stats import norm
+
+
+def black_scholes(S, K, T, r, sigma, option_type="call"):
+    """
+    S: Stock price
+    K: Strike price
+    T: Time to maturity (in years)
+    r: Risk-free interest rate
+    sigma: Volatility of the stock
+    option_type: "call" or "put"
+    """
+    d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
+    d2 = d1 - sigma * math.sqrt(T)
+
+    if option_type == "call":
+        price = S * norm.cdf(d1) - K * math.exp(-r * T) * norm.cdf(d2)
+    elif option_type == "put":
+        price = K * math.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
+    else:
+        raise ValueError("Invalid option type. Use 'call' or 'put'")
+
+    return price
+
+
+def calculate_option_price():
+    try:
+        S = float(entry_S.get())
+        K = float(entry_K.get())
+        T = float(entry_T.get())
+        r = float(entry_r.get())
+        sigma = float(entry_sigma.get())
+        option_type = option_type_var.get()
+
+        price = black_scholes(S, K, T, r, sigma, option_type)
+        result_label.config(text=f"Option Price: ${price:.2f}")
+    except ValueError:
+        messagebox.showerror("Invalid input", "Please enter valid numbers.")
+
+
+# GUI code
+root = tk.Tk()
+root.title("Black-Scholes Option Pricing")
+
+tk.Label(root, text="Stock Price (S):").grid(row=0)
+tk.Label(root, text="Strike Price (K):").grid(row=1)
+tk.Label(root, text="Time to Maturity (T):").grid(row=2)
+tk.Label(root, text="Risk-free Rate (r):").grid(row=3)
+tk.Label(root, text="Volatility (sigma):").grid(row=4)
+tk.Label(root, text="Option Type:").grid(row=5)
+
+entry_S = tk.Entry(root)
+entry_K = tk.Entry(root)
+entry_T = tk.Entry(root)
+entry_r = tk.Entry(root)
+entry_sigma = tk.Entry(root)
+entry_S.grid(row=0, column=1)
+entry_K.grid(row=1, column=1)
+entry_T.grid(row=2, column=1)
+entry_r.grid(row=3, column=1)
+entry_sigma.grid(row=4, column=1)
+
+option_type_var = tk.StringVar(value="call")
+tk.Radiobutton(root, text="Call", variable=option_type_var, value="call").grid(row=5, column=1)
+tk.Radiobutton(root, text="Put", variable=option_type_var, value="put").grid(row=5, column=2)
+
+tk.Button(root, text="Calculate", command=calculate_option_price).grid(row=6, column=1)
+result_label = tk.Label(root, text="")
+result_label.grid(row=7, column=1)
+
+root.mainloop()
